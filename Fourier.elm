@@ -52,7 +52,7 @@ port inputScaling : Signal Float
 type alias Model = { elapsedTime : Time.Time, path : Path.Path, arcLength : Float, circleRadiusLength : Float, circleRadiusLength2 : Float, speedMultiplier : Float }
 
 initialModel : Model
-initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 3 * Time.second }, arcLength = 0, circleRadiusLength = 0, circleRadiusLength2 = 0, speedMultiplier = 0.7 }
+initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, arcLength = 0, circleRadiusLength = 0, circleRadiusLength2 = 0, speedMultiplier = 2 }
 
 currentPoint : Model -> (Float, Float)
 currentPoint model =
