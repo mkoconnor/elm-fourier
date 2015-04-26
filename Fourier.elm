@@ -77,10 +77,15 @@ updateModel model { radii, timeSpan } =
            Path.pruneOld (Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime })
        in   
        { newModel | path <- newPath, centers <- List.reverse newRevCenters }
-  
+
+maxDistOfRadii : List Float -> Float
+maxDistOfRadii l = fst (List.foldl (\radius (prevMax,prevXCoord) -> 
+   let thisXCoord = prevXCoord + radius in
+   (max prevMax (thisXCoord + radius), thisXCoord)) (0,0) l)
+
 toElement : Model -> { width : Int, height : Int } -> E.Element
 toElement model { width, height } = 
-  let mult = (toFloat (min width height) / 2) / List.sum model.radii in
+  let mult = (toFloat (min width height) / 2) / maxDistOfRadii model.radii in
   let centers = List.map (\(x, y) -> (mult * x, mult * y)) model.centers in
   let circles = List.map2 (\center radius -> 
      C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) centers model.radii in
