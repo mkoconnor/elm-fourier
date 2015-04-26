@@ -6,25 +6,30 @@ import Color
 
 type alias PointOnPath = { coords : (Float, Float), timeAdded : Time.Time }
 
-type alias Path = { points : List PointOnPath, timeToKeepPoints : Time.Time }
+type alias Path = { points : List PointOnPath, timeToKeepPoints : Time.Time, closed : Bool }
 
 empty : { timeToKeepPoints : Time.Time } -> Path
-empty { timeToKeepPoints } = { points = [], timeToKeepPoints = timeToKeepPoints }
+empty { timeToKeepPoints } = { points = [], timeToKeepPoints = timeToKeepPoints , closed = False}
 
 addPoint : Path -> PointOnPath -> Path
-addPoint { points, timeToKeepPoints } point =
-   { points = point :: points, timeToKeepPoints = timeToKeepPoints }
+addPoint path point =
+    if path.closed
+    then path
+    else        
+        { points = point :: path.points, timeToKeepPoints = path.timeToKeepPoints, closed = False }
 
 pruneOld : Path -> Path
 pruneOld path =
-  case path.points of
-     [] -> path
-     lastPoint :: _ -> 
-        let cutoff = lastPoint.timeAdded - path.timeToKeepPoints in
-        let newPoints =
-           List.filter (\point -> point.timeAdded >= cutoff) path.points
-        in
-        { points = newPoints, timeToKeepPoints = path.timeToKeepPoints }
+  if path.closed
+  then path
+  else 
+    case path.points of
+       [] -> path
+       lastPoint :: _ -> 
+          let cutoff = lastPoint.timeAdded - path.timeToKeepPoints in
+          if List.any (\point -> point.timeAdded < cutoff) path.points
+          then { path | closed <- True }
+          else path
 
 defaultLine = C.defaultLine
 lineStyle = { defaultLine | color <- Color.blue, width <- 3, join <- C.Smooth, cap <- C.Round }
