@@ -74,7 +74,10 @@ updateModel model { radii, timeSpan } =
       Nothing -> newModel
       Just newPoint -> 
         let newPath =
-           Path.pruneOld (Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime })
+           if radii == model.radii
+           then 
+              Path.pruneOld (Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime })
+           else Path.empty { timeToKeepPoints = model.path.timeToKeepPoints }
        in   
        { newModel | path <- newPath, centers <- List.reverse newRevCenters }
 
