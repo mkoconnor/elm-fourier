@@ -47,50 +47,48 @@ mouseScaling =
 
 rotationsPerSecond = 1/4
 
-port inputScaling : Signal Float
+port inputRadii : Signal (List Float)
                      
-type alias Model = { elapsedTime : Time.Time, path : Path.Path, arcLength : Float, circleRadiusLength : Float, circleRadiusLength2 : Float, speedMultiplier : Float }
+type alias Model = { elapsedTime : Time.Time, path : Path.Path, radii : List Float, centers : List (Float, Float) }
 
 initialModel : Model
-initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, arcLength = 0, circleRadiusLength = 0, circleRadiusLength2 = 1, speedMultiplier = 2 }
+initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, radii = [1, 1] }
 
-currentPoint : Model -> (Float, Float)
-currentPoint model =
- (model.circleRadiusLength * cos model.arcLength, model.circleRadiusLength * sin model.arcLength)
+currentRevCenters : Model -> List (Float, Float)
+currentRevCenters model =
+  let arcLength = 2 * pi * Time.inSeconds model.elapsedTime * rotationsPerSecond
+  let (centers, _, _) = 
+    List.foldl (\radius (acc, (last_x, last_y), arcLength) ->
+        let thisArcLength = 2 * arcLength in
+        let (this_x, this_y) = (last_x + radius * cos thisArcLength, last_y + radius * sin thisArcLength) in
+    ((this_x, this_y)::acc, (this_x, this_y), thisArcLength)) ([], (0,0), arcLength / 2)
+  in 
+  centers
 
-currentPoint2 : Model -> (Float, Float)
-currentPoint2 model =
- let (x, y) = currentPoint model in
- let thisArcLength = model.speedMultiplier * model.arcLength in
- (x + model.circleRadiusLength2 * cos thisArcLength, y + model.circleRadiusLength2 * sin thisArcLength)
-
-updateModel : Model -> { scaling : Float, timeSpan : Time.Time } -> Model
-updateModel model { scaling, timeSpan } = 
-  let newCircleRadiusLength = scaling in
+updateModel : Model -> { radii : List Float, timeSpan : Time.Time } -> Model
+updateModel model { radii, timeSpan } = 
   let newElapsedTime = model.elapsedTime + timeSpan in
-  let newArcLength = 2 * pi * Time.inSeconds newElapsedTime * rotationsPerSecond in
-  let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime }
-  in
-  let newPath =
-     if scaling == model.circleRadiusLength
-     then Path.pruneOld (Path.addPoint model.path { coords = currentPoint2 newModel, timeAdded = model.elapsedTime })
-     else Path.empty { timeToKeepPoints = model.path.timeToKeepPoints }
-  in   
-  { newModel | path <- newPath }
+  let newModel = { model | elapsedTime <- newElapsedTime, radii <- radii } in
+  let newRevCenters = currentRevCenters newModel in
+  case List.head newRevCenters of
+      Nothing -> newModel
+      Just newPoint -> 
+        let newPath =
+           Path.pruneOld (Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime })
+       in   
+       { newModel | path <- newPath, centers <- List.rev newRevCenters }
   
 toElement : Model -> { width : Int, height : Int } -> E.Element
 toElement model { width, height } = 
   let mult = (toFloat (min width height) / 2) / (model.circleRadiusLength + model.circleRadiusLength2) in
-  let circle = C.outlined (C.solid Color.black) (C.circle (mult * model.circleRadiusLength)) in
-  let curPoint = currentPoint model in
-  let mulCurPoint = (mult * fst curPoint, mult * snd curPoint) in
-  let radius = C.traced (C.solid Color.black) (C.segment (0,0) mulCurPoint) in
-  let circle2 = C.move mulCurPoint (C.outlined (C.solid Color.black) (C.circle (mult * model.circleRadiusLength2))) in
-  let curPoint2 = currentPoint2 model in
-  let mulCurPoint2 = (mult * fst curPoint2, mult * snd curPoint2) in
-  let radius2 = C.traced (C.solid Color.black) (C.segment mulCurPoint mulCurPoint2) in
+  let centers = List.map (\(x, y) -> (mult * x, mult * y)) model.centers in
+  let circles = List.map2 (\center radius -> 
+     C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) model.radii centers in
+  let radii = List.map2 (\center1 center2 ->
+    C.traced (C.solid Color.black) (C.segment center1 center2)) ((0,0)::centers) centers
+  in
   let path = Path.toForm model.path { multiplier = mult } in
-  C.collage width height [circle, radius, path, circle2, radius2]
+  C.collage width height (path :: List.append circles radii)
 
 models : Signal Model
 models = Signal.foldp (\(timeSpan, scaling) model -> updateModel model { scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map2 (\x y -> (x,y)) (Time.fps 60) inputScaling)
