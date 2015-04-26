@@ -47,10 +47,12 @@
     }
     var updateRadiiInputs = function (numCircles) {
         var radiusInputsHtml = "";
-        inputRadii = {};
         for (var i = 1; i <= numCircles; i++) {
-          inputRadii[i.toString()] = 1;
-          radiusInputsHtml += "<input class='radius' value='1' key='" + i.toString() + "'/>";
+          var key = i.toString();
+          if (! (key in inputRadii)) { 
+               inputRadii[key] = 1;
+          }
+          radiusInputsHtml += "<input class='radius' value='" + inputRadii[key].toString() + "' key='" + i.toString() + "'/>";
        }
          $("#radius-inputs").html(radiusInputsHtml);
          $(".radius").keypress(function (e) {
