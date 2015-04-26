@@ -90,7 +90,7 @@ upto from to = if to <= from then [] else from :: (upto (from + 1) to)
 updateModel model { radii, timeSpan } =
   let numFakes = List.length radii * 4 in
   let fake = { radii = radii, timeSpan = timeSpan / toFloat numFakes } in
-  List.foldl (\i model -> updateModel' model { fake | prune = i == numFakes}) model (upto 0 numFakes)
+  List.foldl (\i model -> updateModel' model { fake | prune = i == numFakes - 1}) model (upto 0 numFakes)
 
 maxDistOfRadii : List Float -> Float
 maxDistOfRadii l = fst (List.foldl (\radius (prevMax,prevXCoord) -> 
