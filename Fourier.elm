@@ -65,8 +65,8 @@ currentRevCenters model =
   in 
   centers
 
-updateModel' : Model -> { radii : List Float, timeSpan : Time.Time } -> Model
-updateModel' model { radii, timeSpan } = 
+updateModel' : Model -> { radii : List Float, timeSpan : Time.Time, prune : Bool } -> Model
+updateModel' model { radii, timeSpan, prune } = 
   let newElapsedTime = model.elapsedTime + timeSpan in
   let newModel = { model | elapsedTime <- newElapsedTime, radii <- radii } in
   let newRevCenters = currentRevCenters newModel in
@@ -75,18 +75,22 @@ updateModel' model { radii, timeSpan } =
       Just newPoint -> 
         let newPath =
            if radii == model.radii
-           then 
-              Path.pruneOld (Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime })
+           then
+              let path = Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime } in
+              if prune then Path.pruneOld path
+              else path
            else Path.empty { timeToKeepPoints = model.path.timeToKeepPoints }
-       in   
-       { newModel | path <- newPath, centers <- List.reverse newRevCenters }
+       in
+       -- just save time by not reversing if we're not at the last point in the loop
+       { newModel | path <- newPath, centers <- if prune then List.reverse newRevCenters else newRevCenters
+       }
 
 upto from to = if to <= from then [] else from :: (upto (from + 1) to)
 
 updateModel model { radii, timeSpan } =
   let numFakes = List.length radii * 4 in
   let fake = { radii = radii, timeSpan = timeSpan / toFloat numFakes } in
-  List.foldl (\i model -> updateModel' model fake) model (upto 0 numFakes)
+  List.foldl (\i model -> updateModel' model { fake | prune = i == numFakes}) model (upto 0 numFakes)
 
 maxDistOfRadii : List Float -> Float
 maxDistOfRadii l = fst (List.foldl (\radius (prevMax,prevXCoord) -> 
