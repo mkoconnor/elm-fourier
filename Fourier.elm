@@ -7,7 +7,6 @@ import Graphics.Collage as C
 import Graphics.Element as E
 import Signal
 import Window
-import Mouse
 import Path
 
 positionDistance : (Float, Float) -> Float
@@ -16,34 +15,6 @@ positionDistance (x,y) = sqrt (x * x + y * y)
 scaledDimensions : Signal { width : Int, height : Int }
 scaledDimensions = Signal.map (\(width, height) -> { width = width, height = height }) Window.dimensions
 -- scaledDimensions = Signal.map (\(width, height) -> { width = round (toFloat width / 2), height = height } ) Window.dimensions
-
-realMousePosition : Signal (Float, Float)
-realMousePosition = Signal.map2 (\{width,height} (x,y) -> (toFloat x - toFloat width/2,toFloat height/2 - toFloat y)) scaledDimensions Mouse.position
-
-mouseScaling : Signal Float
-mouseScaling =
-  let s =  Signal.foldp (\(isDown,position) (firstPositionWhenDown,overallScalingPlusSinceDown,overallScaling) ->
-   let newFirstPos =
-     if not isDown
-     then Nothing
-     else Just (Maybe.withDefault position firstPositionWhenDown)
-   in
-   let newOverallScaling =
-     if not isDown
-     then overallScalingPlusSinceDown
-     else overallScaling
-   in
-   let newOverallScalingPlusSinceDown =
-     if not isDown
-     then overallScalingPlusSinceDown
-     else
-       case firstPositionWhenDown of
-          Nothing -> overallScalingPlusSinceDown
-          Just pos -> (positionDistance position / positionDistance pos) * overallScaling
-   in
-   (newFirstPos,newOverallScalingPlusSinceDown,newOverallScaling)) (Nothing,1,1) (Signal.map2 (\x y -> (x,y)) Mouse.isDown realMousePosition)
-   in
-   Signal.map (\(_,y,_) -> y) s
 
 rotationsPerSecond = 1/4
 
