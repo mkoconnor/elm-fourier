@@ -28,7 +28,8 @@ pruneOld path =
 
 defaultLine = C.defaultLine
 lineStyle = { defaultLine | color <- Color.blue, width <- 3, join <- C.Smooth, cap <- C.Round }
-toForm : Path -> C.Form
-toForm path =
-   C.traced lineStyle (C.path (List.map (\point -> point.coords) path.points))
+
+toForm : Path -> { multiplier : Float } -> C.Form
+toForm path { multiplier } =
+   C.traced lineStyle (C.path (List.map (\point -> (multiplier * fst point.coords, multiplier * snd point.coords)) path.points))
 

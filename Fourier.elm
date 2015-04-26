@@ -64,15 +64,14 @@ currentPoint2 model =
  let thisArcLength = model.speedMultiplier * model.arcLength in
  (x + model.circleRadiusLength2 * cos thisArcLength, y + model.circleRadiusLength2 * sin thisArcLength)
 
-updateModel : Model -> { width : Int, height : Int, scaling : Float, timeSpan : Time.Time } -> Model
-updateModel model { width, height, scaling, timeSpan } = 
-  let minDim = toFloat (min width height) in
-  let newCircleRadiusLength = 0.5 * scaling * minDim / 2 in
+updateModel : Model -> { scaling : Float, timeSpan : Time.Time } -> Model
+updateModel model { scaling, timeSpan } = 
+  let newCircleRadiusLength = scaling in
   let newElapsedTime = model.elapsedTime + timeSpan in
   let newArcLength = 2 * pi * Time.inSeconds newElapsedTime * rotationsPerSecond in
   let newCircleRadiusLength2 =
     if model.circleRadiusLength2 == 0
-    then 0.3 * minDim / 2
+    then 0.3
     else model.circleRadiusLength2
   in
   let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime, circleRadiusLength2 <- newCircleRadiusLength2 }
@@ -82,15 +81,19 @@ updateModel model { width, height, scaling, timeSpan } =
   
 toElement : Model -> { width : Int, height : Int } -> E.Element
 toElement model { width, height } = 
-  let circle = C.outlined (C.solid Color.black) (C.circle model.circleRadiusLength) in
+  let mult = 0.9 * (toFloat (min width height) / 2) / (model.circleRadiusLength + model.circleRadiusLength2) in
+  let circle = C.outlined (C.solid Color.black) (C.circle (mult * model.circleRadiusLength)) in
   let curPoint = currentPoint model in
-  let radius = C.traced (C.solid Color.black) (C.segment (0,0) curPoint) in
-  let circle2 = C.move curPoint (C.outlined (C.solid Color.black) (C.circle model.circleRadiusLength2)) in
-  let radius2 = C.traced (C.solid Color.black) (C.segment curPoint (currentPoint2 model)) in
-  let path = Path.toForm model.path in
+  let mulCurPoint = (mult * fst curPoint, mult * snd curPoint) in
+  let radius = C.traced (C.solid Color.black) (C.segment (0,0) mulCurPoint) in
+  let circle2 = C.move mulCurPoint (C.outlined (C.solid Color.black) (C.circle (mult * model.circleRadiusLength2))) in
+  let curPoint2 = currentPoint2 model in
+  let mulCurPoint2 = (mult * fst curPoint2, mult * snd curPoint2) in
+  let radius2 = C.traced (C.solid Color.black) (C.segment mulCurPoint mulCurPoint2) in
+  let path = Path.toForm model.path { multiplier = mult } in
   C.collage width height [circle, radius, path, circle2, radius2]
 
 models : Signal Model
-models = Signal.foldp (\(timeSpan, { width, height }, scaling) model -> updateModel model { width = width, height = height, scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map3 (\x y z -> (x,y,z)) (Time.fps 60) scaledDimensions inputScaling)
+models = Signal.foldp (\(timeSpan, scaling) model -> updateModel model { scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map2 (\x y -> (x,y)) (Time.fps 60) inputScaling)
   
 main = Signal.map2 (\model {width, height} -> toElement model {width=width, height=height}) models scaledDimensions
