@@ -83,11 +83,10 @@ updateModel' model { radii, timeSpan } =
 
 upto from to = if to <= from then [] else from :: (upto (from + 1) to)
 
-uptoTwenty = upto 0 20
-
 updateModel model { radii, timeSpan } =
-   let fake = { radii = radii, timeSpan = timeSpan / 20 } in
-   List.foldl (\i model -> updateModel' model fake) model uptoTwenty   
+  let numFakes = List.length radii * 4 in
+  let fake = { radii = radii, timeSpan = timeSpan / toFloat numFakes } in
+  List.foldl (\i model -> updateModel' model fake) model (upto 0 numFakes)
 
 maxDistOfRadii : List Float -> Float
 maxDistOfRadii l = fst (List.foldl (\radius (prevMax,prevXCoord) -> 
