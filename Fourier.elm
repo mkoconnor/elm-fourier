@@ -8,7 +8,6 @@ import Signal
 import Window
 import Mouse
 import Path
-import Html
 
 positionDistance : (Float, Float) -> Float
 positionDistance (x,y) = sqrt (x * x + y * y)
@@ -76,6 +75,4 @@ toElement model { width, height } =
 models : Signal Model
 models = Signal.foldp (\(timeSpan, { width, height }, scaling) model -> updateModel model { width = width, height = height, scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map3 (\x y z -> (x,y,z)) (Time.fps 60) scaledDimensions mouseScaling)
   
-elements = Signal.map2 (\model {width, height} -> toElement model {width=width, height=height}) models scaledDimensions
-
-main = Signal.map (\element -> Html.div [] [Html.h1 [] [Html.text "Fourier Demonstration"], Html.fromElement element]) elements
+main = Signal.map2 (\model {width, height} -> toElement model {width=width, height=height}) models scaledDimensions
