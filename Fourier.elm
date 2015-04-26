@@ -52,16 +52,16 @@ port inputRadii : Signal (List Float)
 type alias Model = { elapsedTime : Time.Time, path : Path.Path, radii : List Float, centers : List (Float, Float) }
 
 initialModel : Model
-initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, radii = [1, 1] }
+initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, radii = [1, 1], centers = [(1,0), (2,0)] }
 
 currentRevCenters : Model -> List (Float, Float)
 currentRevCenters model =
-  let arcLength = 2 * pi * Time.inSeconds model.elapsedTime * rotationsPerSecond
+  let arcLength = 2 * pi * Time.inSeconds model.elapsedTime * rotationsPerSecond in
   let (centers, _, _) = 
     List.foldl (\radius (acc, (last_x, last_y), arcLength) ->
         let thisArcLength = 2 * arcLength in
         let (this_x, this_y) = (last_x + radius * cos thisArcLength, last_y + radius * sin thisArcLength) in
-    ((this_x, this_y)::acc, (this_x, this_y), thisArcLength)) ([], (0,0), arcLength / 2)
+    ((this_x, this_y)::acc, (this_x, this_y), thisArcLength)) ([], (0,0), arcLength / 2) model.radii
   in 
   centers
 
@@ -76,14 +76,14 @@ updateModel model { radii, timeSpan } =
         let newPath =
            Path.pruneOld (Path.addPoint model.path { coords = newPoint, timeAdded = newElapsedTime })
        in   
-       { newModel | path <- newPath, centers <- List.rev newRevCenters }
+       { newModel | path <- newPath, centers <- List.reverse newRevCenters }
   
 toElement : Model -> { width : Int, height : Int } -> E.Element
 toElement model { width, height } = 
-  let mult = (toFloat (min width height) / 2) / (model.circleRadiusLength + model.circleRadiusLength2) in
+  let mult = (toFloat (min width height) / 2) / List.sum model.radii in
   let centers = List.map (\(x, y) -> (mult * x, mult * y)) model.centers in
   let circles = List.map2 (\center radius -> 
-     C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) model.radii centers in
+     C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) centers model.radii in
   let radii = List.map2 (\center1 center2 ->
     C.traced (C.solid Color.black) (C.segment center1 center2)) ((0,0)::centers) centers
   in
@@ -91,6 +91,6 @@ toElement model { width, height } =
   C.collage width height (path :: List.append circles radii)
 
 models : Signal Model
-models = Signal.foldp (\(timeSpan, scaling) model -> updateModel model { scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map2 (\x y -> (x,y)) (Time.fps 60) inputScaling)
+models = Signal.foldp (\(timeSpan, radii) model -> updateModel model { radii = radii, timeSpan = timeSpan}) initialModel (Signal.map2 (\x y -> (x,y)) (Time.fps 60) inputRadii)
   
 main = Signal.map2 (\model {width, height} -> toElement model {width=width, height=height}) models scaledDimensions
