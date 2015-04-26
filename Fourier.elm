@@ -65,8 +65,8 @@ currentRevCenters model =
   in 
   centers
 
-updateModel : Model -> { radii : List Float, timeSpan : Time.Time } -> Model
-updateModel model { radii, timeSpan } = 
+updateModel' : Model -> { radii : List Float, timeSpan : Time.Time } -> Model
+updateModel' model { radii, timeSpan } = 
   let newElapsedTime = model.elapsedTime + timeSpan in
   let newModel = { model | elapsedTime <- newElapsedTime, radii <- radii } in
   let newRevCenters = currentRevCenters newModel in
@@ -80,6 +80,14 @@ updateModel model { radii, timeSpan } =
            else Path.empty { timeToKeepPoints = model.path.timeToKeepPoints }
        in   
        { newModel | path <- newPath, centers <- List.reverse newRevCenters }
+
+upto from to = if to <= from then [] else from :: (upto (from + 1) to)
+
+uptoTwenty = upto 0 20
+
+updateModel model { radii, timeSpan } =
+   let fake = { radii = radii, timeSpan = timeSpan / 20 } in
+   List.foldl (\i model -> updateModel' model fake) model uptoTwenty   
 
 maxDistOfRadii : List Float -> Float
 maxDistOfRadii l = fst (List.foldl (\radius (prevMax,prevXCoord) -> 
