@@ -5,6 +5,7 @@
     <script type="text/javascript" src="elm.js"></script>
     <script type="text/javascript"
             src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="math.min.js"></script>
      <link rel="stylesheet"
            href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">    <link rel="stylesheet"
           href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css"/>
@@ -27,6 +28,8 @@
     <p>How many circles do you want?
       <input id="num-circles" value="3"/></p>
 
+    <!-- <div>Enter a formula for radii (in terms of <code>n</code>, the
+     - index of the circle, starting at 1) here, or manually </div> -->
     <div>Radii (can be any nonnegative numbers):<div id="radius-inputs"</div></div>
     <div id="elm-fourier"></div>
   </body>
@@ -56,6 +59,10 @@
                  sendRadii ();
              }
          });
+         $(".radius").focusout(function () {
+                 inputRadii[$(this).attr('key')] = parseFloat($(this).val());
+                 sendRadii ();
+         });
          sendRadii();
     };
     updateRadiiInputs(3);
@@ -63,6 +70,9 @@
     if (e.which === 13) {
         updateRadiiInputs(parseInt($(this).val()));
       }
-    });
+                             });
+    $("#num-circles").focusout(function () {
+        updateRadiiInputs(parseInt($(this).val()));
+    });                             
   </script>
 </html>
