@@ -27,7 +27,7 @@
     <p>How many circles do you want?
       <input id="num-circles" value="3"/></p>
 
-    <div><div id="radius-inputs"</div></div>
+    <div>Radii (can be any nonnegative numbers):<div id="radius-inputs"</div></div>
     <div id="elm-fourier"></div>
   </body>
   <script type="text/javascript">
@@ -42,9 +42,7 @@
     }
        elmFourier.ports.inputRadii.send(radii);    
     }
-    $("#num-circles").keypress(function (e) {
-    if (e.which === 13) {
-        var numCircles = parseInt($(this).val());
+    var updateRadiiInputs = function (numCircles) {
         var radiusInputsHtml = "";
         inputRadii = {};
         for (var i = 1; i <= numCircles; i++) {
@@ -59,6 +57,11 @@
              }
          });
          sendRadii();
+    };
+    updateRadiiInputs(3);
+    $("#num-circles").keypress(function (e) {
+    if (e.which === 13) {
+        updateRadiiInputs(parseInt($(this).val()));
       }
     });
   </script>
