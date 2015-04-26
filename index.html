@@ -80,5 +80,23 @@
     $("#num-circles").focusout(function () {
         updateRadiiInputs(parseInt($(this).val()));
     });                             
+
+    var radiusString = "1"
+    var parser = math.parser();
+    var computeRadius = function(n) {
+       parser.set("n",n);
+       var ret = parser.eval(radiusString);
+       parser.remove("n");
+       return ret;
+    };
+
+    $("#radius-formula").keypress(function (e) {                             
+      if (e.which === 13) {
+         radiusString = $(this).val();
+         for (var i = 1; i <= numCircles; i++) {
+             inputRadii[i.toString()] = computeRadius(i);
+         }
+         updateRadiiInputs(numCircles);
+     }});
   </script>
 </html>
