@@ -47,6 +47,8 @@ mouseScaling =
 
 rotationsPerSecond = 1/4
 
+port inputScaling : Signal Float
+                     
 type alias Model = { elapsedTime : Time.Time, path : Path.Path, arcLength : Float, circleRadiusLength : Float }
 
 initialModel : Model
@@ -75,6 +77,6 @@ toElement model { width, height } =
   C.collage width height [circle, radius, path]
 
 models : Signal Model
-models = Signal.foldp (\(timeSpan, { width, height }, scaling) model -> updateModel model { width = width, height = height, scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map3 (\x y z -> (x,y,z)) (Time.fps 60) scaledDimensions mouseScaling)
+models = Signal.foldp (\(timeSpan, { width, height }, scaling) model -> updateModel model { width = width, height = height, scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map3 (\x y z -> (x,y,z)) (Time.fps 60) scaledDimensions inputScaling)
   
 main = Signal.map2 (\model {width, height} -> toElement model {width=width, height=height}) models scaledDimensions
