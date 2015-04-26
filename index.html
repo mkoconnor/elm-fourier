@@ -98,7 +98,14 @@
          for (var i = 1; i <= numCircles; i++) {
              inputRadii[i.toString()] = computeRadius(i);
          }
-         updateRadiiInputs(numCircles);
+         updateRadiiInputs();
      }});
+    $("#radius-formula").focusout(function () {
+         radiusString = $(this).val();
+         for (var i = 1; i <= numCircles; i++) {
+             inputRadii[i.toString()] = computeRadius(i);
+         }
+         updateRadiiInputs();
+    });                          
   </script>
 </html>
