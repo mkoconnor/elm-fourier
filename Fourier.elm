@@ -52,7 +52,7 @@ port inputScaling : Signal Float
 type alias Model = { elapsedTime : Time.Time, path : Path.Path, arcLength : Float, circleRadiusLength : Float, circleRadiusLength2 : Float, speedMultiplier : Float }
 
 initialModel : Model
-initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, arcLength = 0, circleRadiusLength = 0, circleRadiusLength2 = 0, speedMultiplier = 2 }
+initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Time.second }, arcLength = 0, circleRadiusLength = 0, circleRadiusLength2 = 1, speedMultiplier = 2 }
 
 currentPoint : Model -> (Float, Float)
 currentPoint model =
@@ -69,12 +69,7 @@ updateModel model { scaling, timeSpan } =
   let newCircleRadiusLength = scaling in
   let newElapsedTime = model.elapsedTime + timeSpan in
   let newArcLength = 2 * pi * Time.inSeconds newElapsedTime * rotationsPerSecond in
-  let newCircleRadiusLength2 =
-    if model.circleRadiusLength2 == 0
-    then 0.3
-    else model.circleRadiusLength2
-  in
-  let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime, circleRadiusLength2 <- newCircleRadiusLength2 }
+  let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime }
   in
   let newPath =
      if scaling == model.circleRadiusLength
