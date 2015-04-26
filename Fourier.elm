@@ -102,7 +102,7 @@ toElement model { width, height } =
   let mult = (toFloat (min width height) / 2) / maxDistOfRadii model.radii in
   let centers = List.map (\(x, y) -> (mult * x, mult * y)) model.centers in
   let circles = List.map2 (\center radius -> 
-     C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) centers model.radii in
+     C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) ((0,0)::centers) model.radii in
   let radii = List.map2 (\center1 center2 ->
     C.traced (C.solid Color.black) (C.segment center1 center2)) ((0,0)::centers) centers
   in
