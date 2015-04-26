@@ -36,12 +36,10 @@
 
     var inputRadii = { '1' : 1, '2' : 1, '3' : 1 };
     var sendRadii = function () {
-       console.log(inputRadii);
        var radii = [];
        for (key in inputRadii) {
          radii.push(inputRadii[key]);
     }
-    console.log(radii);
        elmFourier.ports.inputRadii.send(radii);    
     }
     $("#num-circles").keypress(function (e) {
