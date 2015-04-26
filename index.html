@@ -47,13 +47,17 @@
     }
     var updateRadiiInputs = function (numCircles) {
         var radiusInputsHtml = "";
+        var newInputRadii = {};
         for (var i = 1; i <= numCircles; i++) {
           var key = i.toString();
           if (! (key in inputRadii)) { 
-               inputRadii[key] = 1;
+               newInputRadii[key] = 1;
+          } else {
+               newInputRadii[key] = inputRadii[key];
           }
-          radiusInputsHtml += "<input class='radius' value='" + inputRadii[key].toString() + "' key='" + i.toString() + "'/>";
+          radiusInputsHtml += "<input class='radius' value='" + newInputRadii[key].toString() + "' key='" + i.toString() + "'/>";
        }
+          inputRadii = newInputRadii;
          $("#radius-inputs").html(radiusInputsHtml);
          $(".radius").keypress(function (e) {
              if (e.which === 13) {
