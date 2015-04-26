@@ -49,32 +49,46 @@ rotationsPerSecond = 1/4
 
 port inputScaling : Signal Float
                      
-type alias Model = { elapsedTime : Time.Time, path : Path.Path, arcLength : Float, circleRadiusLength : Float }
+type alias Model = { elapsedTime : Time.Time, path : Path.Path, arcLength : Float, circleRadiusLength : Float, circleRadiusLength2 : Float, speedMultiplier : Float }
 
 initialModel : Model
-initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 3 * Time.second }, arcLength = 0, circleRadiusLength = 0 }
+initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 3 * Time.second }, arcLength = 0, circleRadiusLength = 0, circleRadiusLength2 = 0, speedMultiplier = 0.7 }
 
 currentPoint : Model -> (Float, Float)
 currentPoint model =
  (model.circleRadiusLength * cos model.arcLength, model.circleRadiusLength * sin model.arcLength)
 
+currentPoint2 : Model -> (Float, Float)
+currentPoint2 model =
+ let (x, y) = currentPoint model in
+ let thisArcLength = model.speedMultiplier * model.arcLength in
+ (x + model.circleRadiusLength2 * cos thisArcLength, y + model.circleRadiusLength2 * sin thisArcLength)
+
 updateModel : Model -> { width : Int, height : Int, scaling : Float, timeSpan : Time.Time } -> Model
 updateModel model { width, height, scaling, timeSpan } = 
-  let minDim = min width height in
-  let newCircleRadiusLength = 0.9 * scaling * toFloat minDim / 2 in
+  let minDim = toFloat (min width height) in
+  let newCircleRadiusLength = 0.5 * scaling * minDim / 2 in
   let newElapsedTime = model.elapsedTime + timeSpan in
   let newArcLength = 2 * pi * Time.inSeconds newElapsedTime * rotationsPerSecond in
-  let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime }
+  let newCircleRadiusLength2 =
+    if model.circleRadiusLength2 == 0
+    then 0.3 * minDim / 2
+    else model.circleRadiusLength2
   in
-  let newPath = Path.pruneOld (Path.addPoint model.path { coords = currentPoint newModel, timeAdded = model.elapsedTime }) in
+  let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime, circleRadiusLength2 <- newCircleRadiusLength2 }
+  in
+  let newPath = Path.pruneOld (Path.addPoint model.path { coords = currentPoint2 newModel, timeAdded = model.elapsedTime }) in
   { newModel | path <- newPath }
   
 toElement : Model -> { width : Int, height : Int } -> E.Element
 toElement model { width, height } = 
   let circle = C.outlined (C.solid Color.black) (C.circle model.circleRadiusLength) in
-  let radius = C.traced (C.solid Color.black) (C.segment (0,0) (currentPoint model)) in
+  let curPoint = currentPoint model in
+  let radius = C.traced (C.solid Color.black) (C.segment (0,0) curPoint) in
+  let circle2 = C.move curPoint (C.outlined (C.solid Color.black) (C.circle model.circleRadiusLength2)) in
+  let radius2 = C.traced (C.solid Color.black) (C.segment curPoint (currentPoint2 model)) in
   let path = Path.toForm model.path in
-  C.collage width height [circle, radius, path]
+  C.collage width height [circle, radius, path, circle2, radius2]
 
 models : Signal Model
 models = Signal.foldp (\(timeSpan, { width, height }, scaling) model -> updateModel model { width = width, height = height, scaling = scaling, timeSpan = timeSpan}) initialModel (Signal.map3 (\x y z -> (x,y,z)) (Time.fps 60) scaledDimensions inputScaling)
