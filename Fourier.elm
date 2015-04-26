@@ -19,7 +19,9 @@ scaledDimensions = Signal.map (\(width, height) -> { width = width, height = hei
 rotationsPerSecond = 1/4
 
 port inputRadii : Signal (List Float)
-                     
+
+port showCircles : Signal Bool
+
 type alias Model = { elapsedTime : Time.Time, path : Path.Path, radii : List Float, centers : List (Float, Float) }
 
 initialModel : Model
@@ -68,19 +70,25 @@ maxDistOfRadii l = fst (List.foldl (\radius (prevMax,prevXCoord) ->
    let thisXCoord = prevXCoord + radius in
    (max prevMax (thisXCoord + radius), thisXCoord)) (0,0) l)
 
-toElement : Model -> { width : Int, height : Int } -> E.Element
-toElement model { width, height } = 
+toElement : Model -> { width : Int, height : Int, showCircles:Bool } -> E.Element
+toElement model { width, height, showCircles } = 
   let mult = (toFloat (min width height) / 2) / maxDistOfRadii model.radii in
   let centers = List.map (\(x, y) -> (mult * x, mult * y)) model.centers in
-  let circles = List.map2 (\center radius -> 
-     C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) ((0,0)::centers) model.radii in
-  let radii = List.map2 (\center1 center2 ->
-    C.traced (C.solid Color.black) (C.segment center1 center2)) ((0,0)::centers) centers
-  in
+  let circlesAndRadii =
+    if not showCircles
+    then []
+    else 
+      let circles = List.map2 (\center radius -> 
+       C.move center (C.outlined (C.solid Color.black) (C.circle (mult * radius)))) ((0,0)::centers) model.radii in
+       let radii = List.map2 (\center1 center2 ->
+            C.traced (C.solid Color.black) (C.segment center1 center2)) ((0,0)::centers) centers
+       in
+       List.append circles radii
+  in       
   let path = Path.toForm model.path { multiplier = mult } in
-  C.collage width height (path :: List.append circles radii)
+  C.collage width height (path :: circlesAndRadii)
 
 models : Signal Model
 models = Signal.foldp (\(timeSpan, radii) model -> updateModel model { radii = radii, timeSpan = timeSpan}) initialModel (Signal.map2 (\x y -> (x,y)) (Time.fps 60) inputRadii)
   
-main = Signal.map2 (\model {width, height} -> toElement model {width=width, height=height}) models scaledDimensions
+main = Signal.map3 (\model {width, height} showCircles -> toElement model {width=width, height=height, showCircles = showCircles}) models scaledDimensions showCircles
