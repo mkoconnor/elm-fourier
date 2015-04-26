@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fourier Demo</title>
+    <script type="text/javascript" src="fourier.js"></script>
+     <link rel="stylesheet"
+           href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">    <link rel="stylesheet"
+          href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css"/>
+     <style>
+  body {
+  margin: 0 30px 30px 30px;
+  }
+
+  #elm-fourier {
+        width: 600px;
+        height: 600px;
+        background-color: white;
+        border: 1px solid #babdb6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Fourier Demonstration</h1>
+    <div id="elm-fourier"></div>
+  </body>
+  <script type="text/javascript">
+    var div = document.getElementById('elm-fourier');
+    var elmFourier = Elm.embed(Elm.Doodle, div, {});
+  </script>
+</html>
