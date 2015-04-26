@@ -46,13 +46,21 @@
     }
        elmFourier.ports.inputRadii.send(radii);    
     }
+    var radiusString = "1"
+    var parser = math.parser();
+    var computeRadius = function(n) {
+       parser.set("n",n);
+       var ret = parser.eval(radiusString);
+       parser.remove("n");
+       return ret;
+    };
     var updateRadiiInputs = function () {
         var radiusInputsHtml = "";
         var newInputRadii = {};
         for (var i = 1; i <= numCircles; i++) {
           var key = i.toString();
           if (! (key in inputRadii)) { 
-               newInputRadii[key] = 1;
+               newInputRadii[key] = computeRadius(i);
           } else {
                newInputRadii[key] = inputRadii[key];
           }
@@ -83,15 +91,6 @@
         numCircles = parseInt($(this).val());
         updateRadiiInputs();
     });                             
-
-    var radiusString = "1"
-    var parser = math.parser();
-    var computeRadius = function(n) {
-       parser.set("n",n);
-       var ret = parser.eval(radiusString);
-       parser.remove("n");
-       return ret;
-    };
 
     $("#radius-formula").keypress(function (e) {                             
       if (e.which === 13) {
