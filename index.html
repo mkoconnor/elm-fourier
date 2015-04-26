@@ -51,7 +51,7 @@
         inputRadii = {};
         for (var i = 1; i <= numCircles; i++) {
           inputRadii[i.toString()] = 1;
-          radiusInputsHtml += "<input class='radius' value='1' id='" + i.toString() + "'/>";
+          radiusInputsHtml += "<input class='radius' value='1' key='" + i.toString() + "'/>";
        }
          $("#radius-inputs").html(radiusInputsHtml);
          $(".radius").keypress(function (e) {
