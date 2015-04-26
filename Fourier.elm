@@ -76,12 +76,16 @@ updateModel model { scaling, timeSpan } =
   in
   let newModel = { model | circleRadiusLength <- newCircleRadiusLength, arcLength <- newArcLength, elapsedTime <- newElapsedTime, circleRadiusLength2 <- newCircleRadiusLength2 }
   in
-  let newPath = Path.pruneOld (Path.addPoint model.path { coords = currentPoint2 newModel, timeAdded = model.elapsedTime }) in
+  let newPath =
+     if scaling == model.circleRadiusLength
+     then Path.pruneOld (Path.addPoint model.path { coords = currentPoint2 newModel, timeAdded = model.elapsedTime })
+     else Path.empty { timeToKeepPoints = model.path.timeToKeepPoints }
+  in   
   { newModel | path <- newPath }
   
 toElement : Model -> { width : Int, height : Int } -> E.Element
 toElement model { width, height } = 
-  let mult = 0.9 * (toFloat (min width height) / 2) / (model.circleRadiusLength + model.circleRadiusLength2) in
+  let mult = (toFloat (min width height) / 2) / (model.circleRadiusLength + model.circleRadiusLength2) in
   let circle = C.outlined (C.solid Color.black) (C.circle (mult * model.circleRadiusLength)) in
   let curPoint = currentPoint model in
   let mulCurPoint = (mult * fst curPoint, mult * snd curPoint) in
