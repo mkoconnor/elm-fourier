@@ -24,41 +24,44 @@
   <body>
     <h1>Fourier Circles</h1>
 
-    <input id="radius-1" value="1">
-    <input id="radius-2" value="1">
-    <input id="radius-3" value="1">
+    <p>How many circles do you want?
+      <input id="num-circles" value="3"/></p>
+
+    <div><div id="radius-inputs"</div></div>
     <div id="elm-fourier"></div>
   </body>
   <script type="text/javascript">
     var div = document.getElementById('elm-fourier');
     var elmFourier = Elm.embed(Elm.Fourier, div, { inputRadii:[1,1,1] });
 
-    var keys = ['1', '2', '3'];
     var inputRadii = { '1' : 1, '2' : 1, '3' : 1 };
     var sendRadii = function () {
+       console.log(inputRadii);
        var radii = [];
        for (key in inputRadii) {
          radii.push(inputRadii[key]);
-       }
-       elmFourier.ports.inputRadii.send(radii.reverse());    
     }
-    $("#radius-1").keypress(function (e) {
-        if (e.which === 13) {
-            inputRadii['1'] = parseFloat($(this).val());
-            sendRadii ();
-        }
-    });
-    $("#radius-2").keypress(function (e) {
-        if (e.which === 13) {
-            inputRadii['2'] = parseFloat($(this).val());
-            sendRadii ();
-        }
-    });
-    $("#radius-3").keypress(function (e) {
-        if (e.which === 13) {
-            inputRadii['3'] = parseFloat($(this).val());
-            sendRadii ();
-        }
+    console.log(radii);
+       elmFourier.ports.inputRadii.send(radii);    
+    }
+    $("#num-circles").keypress(function (e) {
+    if (e.which === 13) {
+        var numCircles = parseInt($(this).val());
+        var radiusInputsHtml = "";
+        inputRadii = {};
+        for (var i = 1; i <= numCircles; i++) {
+          inputRadii[i.toString()] = 1;
+          radiusInputsHtml += "<input class='radius' value='1' id='" + i.toString() + "'/>";
+       }
+         $("#radius-inputs").html(radiusInputsHtml);
+         $(".radius").keypress(function (e) {
+             if (e.which === 13) {
+                 inputRadii[$(this).attr('key')] = parseFloat($(this).val());
+                 sendRadii ();
+             }
+         });
+         sendRadii();
+      }
     });
   </script>
 </html>
