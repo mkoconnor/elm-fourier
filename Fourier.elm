@@ -1,3 +1,4 @@
+module Fourier where
 import Maybe
 import Time
 import Color
@@ -13,7 +14,8 @@ positionDistance : (Float, Float) -> Float
 positionDistance (x,y) = sqrt (x * x + y * y)
 
 scaledDimensions : Signal { width : Int, height : Int }
-scaledDimensions = Signal.map (\(width, height) -> { width = round (toFloat width / 2), height = height } ) Window.dimensions
+scaledDimensions = Signal.map (\(width, height) -> { width = width, height = height }) Window.dimensions
+-- scaledDimensions = Signal.map (\(width, height) -> { width = round (toFloat width / 2), height = height } ) Window.dimensions
 
 realMousePosition : Signal (Float, Float)
 realMousePosition = Signal.map2 (\{width,height} (x,y) -> (toFloat x - toFloat width/2,toFloat height/2 - toFloat y)) scaledDimensions Mouse.position
