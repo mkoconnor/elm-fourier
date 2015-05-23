@@ -29,12 +29,12 @@ initialModel = { elapsedTime = 0, path = Path.empty { timeToKeepPoints = 4 * Tim
 
 currentRevCenters : Model -> List (Float, Float)
 currentRevCenters model =
-  let arcLength = 2 * pi * Time.inSeconds model.elapsedTime * rotationsPerSecond in
+  let arcLength' = 2 * pi * Time.inSeconds model.elapsedTime * rotationsPerSecond in
   let (centers, _, _) = 
     List.foldl (\radius (acc, (last_x, last_y), arcLength) ->
         let thisArcLength = 2 * arcLength in
         let (this_x, this_y) = (last_x + radius * cos thisArcLength, last_y + radius * sin thisArcLength) in
-    ((this_x, this_y)::acc, (this_x, this_y), thisArcLength)) ([], (0,0), arcLength / 2) model.radii
+    ((this_x, this_y)::acc, (this_x, this_y), thisArcLength)) ([], (0,0), 'arcLength / 2) model.radii
   in 
   centers
 
