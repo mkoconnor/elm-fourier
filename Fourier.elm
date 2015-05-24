@@ -31,10 +31,10 @@ currentRevCenters : Model -> List (Float, Float)
 currentRevCenters model =
   let arcLengthInitial = 2 * pi * Time.inSeconds model.elapsedTime * rotationsPerSecond in
   let (centers, _, _) = 
-    List.foldl (\radius (acc, (last_x, last_y), arcLength) ->
-        let thisArcLength = arcLength + arcLengthInitial / 2 in
+    List.foldl (\radius (acc, (last_x, last_y), n) ->
+        let thisArcLength = n * arcLengthInitial in
         let (this_x, this_y) = (last_x + radius * cos thisArcLength, last_y + radius * sin thisArcLength) in
-    ((this_x, this_y)::acc, (this_x, this_y), thisArcLength)) ([], (0,0), arcLengthInitial / 2) model.radii
+    ((this_x, this_y)::acc, (this_x, this_y), n + 1)) ([], (0,0), 1) model.radii
   in 
   centers
 
